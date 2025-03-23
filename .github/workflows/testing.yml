@@ -14,11 +14,11 @@ permissions:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
+
     services:
       mariadb:
-        image: mariadb:lts-ubi9
+        image: mysql:lts
         env:
           MYSQL_ROOT_PASSWORD: root
           MYSQL_DATABASE: test_db
