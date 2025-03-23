@@ -10,7 +10,7 @@ on:
     branches: [ "main" ]
 
 env:
-  DB_CONNECTION_STRING: "mariadb+pymysql://test_user:test_pass@localhost:33306/test_db"
+  DB_CONNECTION_STRING: "mysql+pymysql://test_user:test_pass@localhost:33306/test_db"
   HASH_SALT: "tru3_h45h_541t"
 
 permissions:
