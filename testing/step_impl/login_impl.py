@@ -22,18 +22,19 @@ def create_correct_user():
 def send_post_request(url: str, email: str, password: str) -> None:
     full_url = f"{BASE_URL}{url}"
     response = requests.post(full_url, json={"email": email, "password": password})
-    data_store.scenario['response_data'] = response.json()
-    data_store.scenario['response_code'] = response.status_code
+    data_store.scenario['response'] = response
     print(f"Request was sent successfully to url {url}")
 
 
 @step("Verify response status is <status_code>")
 def verify_response_status(status_code: str) -> None:
-    assert data_store.scenario['response_code'] == int(status_code)
+    response_code = data_store.scenario['response'].status_code
+    assert response_code == int(status_code)
     print(f"Response status {status_code} was verified")
 
 
 @step("Verify response contains <key> with data <value>")
 def verify_response_contains(key: str, value: str) -> None:
-    assert data_store.scenario['response_data'][key] == value
+    response_data = data_store.scenario['response'].json()
+    assert response_data[key] == value
     print(f"Response contains {key} with data {value}")
