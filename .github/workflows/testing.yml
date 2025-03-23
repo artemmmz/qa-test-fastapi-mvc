@@ -1,0 +1,73 @@
+# This workflow will install Python dependencies, run tests and lint with a single version of Python
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
+
+name: Testing with Gauge
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    services:
+      mariadb:
+        image: mariadb:latest
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: test_db
+          MYSQL_USER: test_user
+          MYSQL_PASSWORD: test_pass
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping -h localhost -u root --password=root" --health-interval=10s --health-timeout=5s --health-retries=3
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.13"
+
+      - name: Install Gauge
+        run: |
+          curl -SsL https://downloads.gauge.org/stable | sh
+
+      - name: Install Dependencies
+        run: |
+          pip install -r requirements.txt
+          gauge install python
+          pip install -r testing/requirements.txt
+
+      - name: Start FastAPI Service
+        run: |
+          cd app
+          DB_CONNECTION_STRING=mariadb+pymysql://test_user:test_pass@localhost:3306/test_db HASH_SALT=tru3_h45h_541t uvicorn main:app --host 0.0.0.0 --port 3000 
+          sleep 10
+
+      - name: Wait for FastAPI to be Ready
+        run: |
+          echo "Waiting for FastAPI..."
+          until curl -sSf http://localhost:3000/docs; do
+            echo "FastAPI is not ready yet..."
+            sleep 5
+          done
+          echo "FastAPI is up!"
+
+      - name: Run Gauge Tests
+        run: gauge run testing/specs/login.spec
+
+      - name: 📤 Upload Gauge Reports (on failure)
+        if: failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: gauge-reports
+          path: reports/html-report

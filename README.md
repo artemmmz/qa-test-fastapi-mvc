@@ -104,3 +104,17 @@ bash dev.bash
 ```sh
 docker compose up -d
 ```
+
+## Testing
+After start the FastAPI application, you can use tests
+
+### Prepare
+```bash
+cd testing
+pip install -r requirements.txt
+```
+
+### Run tests
+```sh
+run_tests.sh
+```
