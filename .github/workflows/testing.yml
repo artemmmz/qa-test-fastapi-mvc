@@ -9,6 +9,10 @@ on:
   pull_request:
     branches: [ "main" ]
 
+env:
+  DB_CONNECTION_STRING: "mariadb+pymysql://test_user:test_pass@localhost:33306/test_db"
+  HASH_SALT: "tru3_h45h_541t"
+
 permissions:
   contents: read
 
@@ -56,8 +60,13 @@ jobs:
       - name: Start FastAPI Service
         run: |
           cd app
-          DB_CONNECTION_STRING=mariadb+pymysql://test_user:test_pass@localhost:33306/test_db HASH_SALT=tru3_h45h_541t nohup uvicorn main:app --host 0.0.0.0 --port 3000 &
+          nohup uvicorn main:app --host 0.0.0.0 --port 3000 &
           sleep 10
+
+      - name: Init Database Tables
+        run: |
+          cd app
+          python db_init.py
 
       - name: Wait for FastAPI to be Ready
         run: |
